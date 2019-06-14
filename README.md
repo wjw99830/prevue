@@ -1,2 +1,2 @@
 # configurable-ui
-With the goal of making ui configurable with Vue.
+With the goal of making ui configurable using Vue.
