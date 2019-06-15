@@ -20,14 +20,15 @@ export function genTag(comp: IComponent, indent = 0) {
           ` ${prop.key}="${prop.value}"`;
     }
   }
-  tag += '>';
-  if (comp.children.length > 0) {
-    tag += '\n';
+  if (comp.children && comp.children.length > 0) {
+    tag += '>\n';
     for (const child of comp.children) {
       tag += genTag(child, indent + 2);
     }
     tag += ' '.repeat(indent);
+    tag += `</${comp.tag}>\n`;
+  } else {
+    tag += ' />\n';
   }
-  tag += `</${comp.tag}>\n`;
   return tag;
 }

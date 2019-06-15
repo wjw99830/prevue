@@ -79,6 +79,7 @@ export const components: IComponent[] = [{
 }, {
   name: '表单项 (容器)',
   tag: 'el-form-item',
+  text: '',
   children: [],
   kv: {
     props: [{

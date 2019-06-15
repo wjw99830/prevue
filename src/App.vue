@@ -54,7 +54,6 @@ export default class App extends Vue {
                 { components.filter(comp => {
                   if (this.focusedComponent) {
                     if (this.focusedComponent.name === '表格 (容器)') {
-                      console.log()
                       return comp.name === '表格列';
                     } else if (this.focusedComponent.name === '表单 (容器)') {
                       return comp.name === '表单项 (容器)';
@@ -109,8 +108,10 @@ export default class App extends Vue {
                   if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
                     this.selectedComponent = null;
                     this.value = '';
-                  } else if (this.focusedComponent.name === '表单项 (容器)' && this.focusedComponent.children!.length > 0) {
+                  } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
                     this.focusedComponent = this.focusedComponent.parent!;
+                    this.selectedComponent = clone(this.value);
+                    this.selectedComponent!.cid = cid++;
                   } else {
                     this.selectedComponent = clone(this.value);
                     this.selectedComponent!.cid = cid++;
@@ -124,7 +125,8 @@ export default class App extends Vue {
             </div>
           </el-form>
           <el-form label-width="120px" label-position="left">
-            <h1>修改焦点元素</h1>
+            <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => this.focusedComponent = this.focusedComponent!.parent!}>聚焦父容器</el-button> }</h1>
+            
             { this.focusedComponent && <el-form-item label="组件名称: ">{this.focusedComponent.name}</el-form-item> }
             { this.focusedComponent && this.focusedComponent.text !== undefined &&
               <el-form-item label="文本: ">
