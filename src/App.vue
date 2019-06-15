@@ -38,9 +38,9 @@ export default class App extends Vue {
           options: [
             { name: '默认', value: '' },
             { name: '基本', value: '' },
-            { name: '默认', value: '' },
-            { name: '默认', value: '' },
-            { name: '默认', value: '' },
+            { name: '警告', value: '' },
+            { name: '错误', value: '' },
+            { name: '成功', value: '' },
           ]
         }]
       },
