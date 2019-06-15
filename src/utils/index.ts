@@ -8,7 +8,13 @@ export function genTag(comp: IComponent, indent = 0) {
   }
   if (comp.kv.props) {
     for (const prop of comp.kv.props) {
-      tag += ` ${prop.key}="${prop.value}"`;
+      tag += typeof prop.value === 'boolean' ?
+        prop.value ? ` ${prop.key}` : ` :${prop.key}="false"`
+        :
+        prop.dynamic ?
+          ` :${prop.key}="${prop.value}"`
+          :
+          ` ${prop.key}="${prop.value}"`;
     }
   }
   tag += '>';

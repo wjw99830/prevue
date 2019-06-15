@@ -4,6 +4,7 @@ export interface IField {
   value: any;
   options?: { name: string; value: string, disabled?: boolean }[];
   multiple?: boolean;
+  dynamic?: boolean;
 }
 export interface IComponent {
   children: IComponent[];
@@ -18,7 +19,7 @@ export interface IComponent {
   parent?: IComponent;
 }
 export const components: IComponent[] = [{
-  name: '通用容器',
+  name: '通用 (容器)',
   tag: 'div',
   text: '',
   kv: {
@@ -42,7 +43,7 @@ export const components: IComponent[] = [{
   },
   children: [],
 }, {
-  name: '表单容器',
+  name: '表单 (容器)',
   tag: 'el-form',
   children: [],
   kv: {
@@ -74,7 +75,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '表单项容器',
+  name: '表单项 (容器)',
   tag: 'el-form-item',
   children: [],
   kv: {
@@ -107,15 +108,15 @@ export const components: IComponent[] = [{
   name: '输入框',
   tag: 'el-input',
   kv: {
-    props: [{
-      name: '占位符(输入为空时显示的文字)',
-      key: 'placeholder',
-      value: '请输入占位符',
-    }],
+    props: [],
     attrs: [{
       name: 'css样式',
       key: 'style',
       value: 'width: 100px',
+    }, {
+      name: '占位符(输入为空时显示的文字)',
+      key: 'placeholder',
+      value: '请输入',
     }]
   },
   children: [],
@@ -132,6 +133,65 @@ export const components: IComponent[] = [{
       name: '开启时的文字',
       key: 'active-text',
       value: '开',
+    }],
+  },
+}, {
+  name: '表格 (容器)',
+  tag: 'el-table',
+  children: [],
+  kv: {
+    props: [{
+      name: '斑马纹',
+      key: 'stripe',
+      value: false,
+    }],
+  },
+}, {
+  name: '表格列',
+  tag: 'el-table-column',
+  children: [],
+  kv: {
+    props: [{
+      name: '列名',
+      key: 'label',
+      value: '',
+    }, {
+      name: '对齐方式',
+      key: 'align',
+      value: '',
+      options: [
+        { name: '居中', value: 'center' },
+        { name: '左对齐', value: 'left' },
+        { name: '右对齐', value: 'right' },
+      ],
+    }],
+  }
+}, {
+  name: '选择器',
+  tag: 'el-select',
+  children: [{
+    name: '选项',
+    children: [],
+    tag: 'el-option',
+    kv: {
+      props: [{
+        name: '选项标签',
+        key: 'label',
+        value: `'选项1'`,
+        dynamic: true,
+      }, {
+        name: '选项值',
+        key: 'value',
+        value: '',
+        dynamic: true,
+      }],
+    },
+  }],
+  kv: {
+    attrs: [{
+      name: '占位符',
+      key: 'placeholder',
+      value: '请选择',
     }],
   },
 }];

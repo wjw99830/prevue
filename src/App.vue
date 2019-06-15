@@ -28,10 +28,19 @@ export default class App extends Vue {
       }
     })
   }
+  save() {
+    localStorage.setItem('latest-render-tree', JSON.stringify(this.renderTree));
+  }
   render (h: CreateElement) {
     return (
       <div id="app" class="flex">
         <div id="menubar">
+          <div className="flex center around">
+            <el-button type="primary" onClick={() => {
+              const code = genTag(this.renderTree);
+              console.log(code);
+            }}>预览Vue文件</el-button>
+          </div>
           <el-form label-width="80px">
             <h1>增加子元素</h1>
             <el-form-item label="组件: ">
@@ -39,7 +48,17 @@ export default class App extends Vue {
                   this.selectedComponent = clone(e);
                   this.selectedComponent!.cid = cid++;
                 }} value-key="name" placeholder="请选择">
-                { components.map((comp) => <el-option key={comp.name} label={comp.name} value={comp}></el-option>) }
+                { components.filter(comp => {
+                  if (this.focusedComponent) {
+                    if (this.focusedComponent.name === '表格 (容器)') {
+                      console.log()
+                      return comp.name === '表格列';
+                    } else if (this.focusedComponent.name === '表单 (容器)') {
+                      return comp.name === '表单项 (容器)';
+                    }
+                    return true;
+                  }
+                }).map((comp) => <el-option key={comp.name} label={comp.name} value={comp}></el-option>) }
               </el-select>
             </el-form-item>
             { this.selectedComponent && this.selectedComponent.kv.attrs && <h2>Attrs</h2> }
@@ -59,12 +78,15 @@ export default class App extends Vue {
             { this.selectedComponent && this.selectedComponent.kv.props && this.selectedComponent.kv.props.map(prop => (
               <el-form-item label={`${prop.name}: `}>
                 {
-                  prop.options ? 
+                  prop.options ?
                     <el-select v-model={prop.value} multiple={!!prop.multiple} placeholder="请选择">
                       { prop.options.map(option => <el-option key={option.name} label={option.name} value={option.value}></el-option>) }
                     </el-select>
                     :
-                    <el-input v-model={prop.value} placeholder="请输入"></el-input>
+                    typeof prop.value === 'boolean' ?
+                      <el-switch v-model={prop.value}>{prop.name}</el-switch>
+                      :
+                      <el-input v-model={prop.value} placeholder="请输入"></el-input>
                 }
               </el-form-item>
             )) }
@@ -75,12 +97,17 @@ export default class App extends Vue {
                 if (this.selectedComponent.name.includes('容器')) {
                   this.focusedComponent = this.selectedComponent;
                 }
+                if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
+                  this.selectedComponent = null;
+                  this.value = '';
+                } else if (this.focusedComponent.name === '表单项 (容器)' && this.focusedComponent.children.length > 0) {
+                  this.focusedComponent = this.focusedComponent.parent!;
+                } else {
+                  this.selectedComponent = clone(this.value);
+                }
               } else {
                 Message.warning('请选择组件');
               }
-              console.log(genTag(this.renderTree));
-              this.selectedComponent = null;
-              this.value = '';
             }}>确定</el-button>
           </el-form>
           <el-form label-width="80px">
@@ -114,7 +141,10 @@ export default class App extends Vue {
                       { prop.options.map(option => <el-option key={option.name} label={option.name} value={option.value}></el-option>) }
                     </el-select>
                     :
-                    <el-input v-model={prop.value} placeholder="请输入"></el-input>
+                    typeof prop.value === 'boolean' ?
+                      <el-switch v-model={prop.value}>{prop.name}</el-switch>
+                      :
+                      <el-input v-model={prop.value} placeholder="请输入"></el-input>
                 }
               </el-form-item>
             )) }
@@ -146,27 +176,16 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
       attrs[attr.key] = attr.value;
     }
   }
+  const classList = attrs.class;
+  const styleStr = attrs.style || '';
+  delete attrs.class;
+  delete attrs.style;
   const focusClass = this.focusedComponent && this.focusedComponent.cid === meta!.cid ? 'focus' : '';
   const vnode: VNode = h(meta.tag, {
     props: { ...props, value: '' },
     attrs: { ...attrs, id: meta.cid && meta.cid.toString() },
-    class: attrs.class ? attrs.class.concat([focusClass]) : focusClass,
-    style: {
-      padding: '5px',
-    },
-    nativeOn: {
-      click: (e: MouseEvent) => {
-        for (const target of e.composedPath()) {
-          const elm = target as HTMLElement;
-          const cid = meta.cid === undefined ? -1 : 0;
-          if (elm.id === cid.toString()) {
-            this.focusedComponent = meta;
-            continue;
-          }
-        }
-        e.stopPropagation();
-      },
-    },
+    class: classList ? classList.concat([focusClass]) : [focusClass],
+    style: { ...parseStyle(styleStr), padding: '5px' },
     ...(meta.tag.startsWith('el') ? {
       nativeOn: {
         click: (e: MouseEvent) => {
@@ -197,9 +216,19 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
       },
     })
   }, [meta.text, ...meta.children.map(child => genNode.call(this, h, child))]);
-  if (meta.tag === 'el-form')
-    console.log(vnode)
+  if (meta.tag === 'el-table-column') {
+    console.log(vnode);
+  }
   return vnode;
+}
+function parseStyle(str: string) {
+  const properties = str.split(';');
+  const style: Record<string, string> = {};
+  for (const prop of properties) {
+    const [key, value] = prop.split(':').map(item => item.trim());
+    style[key] = value;
+  }
+  return style;
 }
 </script>
 
