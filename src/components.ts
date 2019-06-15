@@ -5,15 +5,16 @@ export interface IField {
   options?: { name: string; value: string, disabled?: boolean }[];
   multiple?: boolean;
   dynamic?: boolean;
+  default?: any;
 }
 export interface IComponent {
-  children: IComponent[];
   name: string;
   tag: string;
   kv: {
     attrs?: IField[];
     props?: IField[];
   };
+  children?: IComponent[];
   text?: string;
   cid?: number;
   parent?: IComponent;
@@ -21,7 +22,6 @@ export interface IComponent {
 export const components: IComponent[] = [{
   name: '通用 (容器)',
   tag: 'div',
-  text: '',
   kv: {
     attrs: [{
       name: '样式',
@@ -68,10 +68,12 @@ export const components: IComponent[] = [{
       name: '标签宽度',
       key: 'label-width',
       value: '50px',
+      default: '',
     }, {
       name: '标签对齐方式',
       key: 'label-position',
       value: 'right',
+      default: '',
     }],
   },
 }, {
@@ -83,6 +85,7 @@ export const components: IComponent[] = [{
       name: '标签',
       key: 'label',
       value: '',
+      default: '',
     }],
   },
 }, {
@@ -94,6 +97,7 @@ export const components: IComponent[] = [{
       name: '类型',
       key: 'type',
       value: 'primary',
+      default: '',
       options: [
         { name: '默认', value: '' },
         { name: '基本', value: 'primary' },
@@ -101,9 +105,34 @@ export const components: IComponent[] = [{
         { name: '错误', value: 'danger' },
         { name: '成功', value: 'success' },
       ],
+    }, {
+      name: '尺寸',
+      key: 'size',
+      value: '',
+      default: '',
+      options: [
+        { name: '默认', value: '' },
+        { name: '中等', value: 'medium' },
+        { name: '较小', value: 'small' },
+        { name: '最小', value: 'mini' },
+      ],
+    }, {
+      name: '圆角',
+      key: 'round',
+      value: false,
+      default: false,
+    }, {
+      name: '圆形',
+      key: 'circle',
+      value: false,
+      default: false,
+    }, {
+      name: '图标',
+      key: 'icon',
+      value: '',
+      default: '',
     }],
   },
-  children: [],
 }, {
   name: '输入框',
   tag: 'el-input',
@@ -113,26 +142,28 @@ export const components: IComponent[] = [{
       name: 'css样式',
       key: 'style',
       value: 'width: 100px',
+      default: '',
     }, {
-      name: '占位符(输入为空时显示的文字)',
+      name: '占位符',
       key: 'placeholder',
       value: '请输入',
+      default: '',
     }]
   },
-  children: [],
 }, {
   name: '开关',
   tag: 'el-switch',
-  children: [],
   kv: {
     props: [{
       name: '关闭时的文字',
       key: 'inactive-text',
       value: '关',
+      default: '',
     }, {
       name: '开启时的文字',
       key: 'active-text',
       value: '开',
+      default: '',
     }],
   },
 }, {
@@ -144,12 +175,12 @@ export const components: IComponent[] = [{
       name: '斑马纹',
       key: 'stripe',
       value: false,
+      default: false,
     }],
   },
 }, {
   name: '表格列',
   tag: 'el-table-column',
-  children: [],
   kv: {
     props: [{
       name: '列名',
@@ -159,6 +190,7 @@ export const components: IComponent[] = [{
       name: '对齐方式',
       key: 'align',
       value: '',
+      default: '',
       options: [
         { name: '居中', value: 'center' },
         { name: '左对齐', value: 'left' },
@@ -192,6 +224,17 @@ export const components: IComponent[] = [{
       name: '占位符',
       key: 'placeholder',
       value: '请选择',
+      default: '',
     }],
   },
+}, {
+  name: '多选框',
+  tag: 'el-checkbox',
+  text: '',
+  kv: {},
+}, {
+  name: '单选框',
+  tag: 'el-radio',
+  text: '',
+  kv: {},
 }];

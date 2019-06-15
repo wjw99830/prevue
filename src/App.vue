@@ -9,6 +9,8 @@ let cid = 0;
 @Component
 export default class App extends Vue {
   value='';
+  previewDialog = false;
+  previewCode = '';
   selectedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
   renderTree: IComponent = {
@@ -23,7 +25,7 @@ export default class App extends Vue {
     document.addEventListener('keydown', ({ key }) => {
       if (key === 'Delete' && this.focusedComponent && this.focusedComponent.parent) {
         const parent = this.focusedComponent.parent;
-        parent.children.splice(parent.children.indexOf(this.focusedComponent), 1);
+        parent.children!.splice(parent.children!.indexOf(this.focusedComponent), 1);
         this.focusedComponent = null;
       }
     })
@@ -35,13 +37,14 @@ export default class App extends Vue {
     return (
       <div id="app" class="flex">
         <div id="menubar">
-          <div className="flex center around">
+          <div class="flex center end">
             <el-button type="primary" onClick={() => {
               const code = genTag(this.renderTree);
-              console.log(code);
+              this.previewCode = code;
+              this.previewDialog = true;
             }}>预览Vue文件</el-button>
           </div>
-          <el-form label-width="80px">
+          <el-form label-width="120px" label-position="left">
             <h1>增加子元素</h1>
             <el-form-item label="组件: ">
               <el-select v-model={this.value} onChange={(e: any) => {
@@ -61,6 +64,11 @@ export default class App extends Vue {
                 }).map((comp) => <el-option key={comp.name} label={comp.name} value={comp}></el-option>) }
               </el-select>
             </el-form-item>
+            { this.selectedComponent && typeof this.selectedComponent.text !== 'undefined' &&
+              <el-form-item label="文本">
+                <el-input v-model={this.selectedComponent.text} placeholder="请输入文本"></el-input>
+              </el-form-item>
+            }
             { this.selectedComponent && this.selectedComponent.kv.attrs && <h2>Attrs</h2> }
             { this.selectedComponent && this.selectedComponent.kv.attrs && this.selectedComponent.kv.attrs.map(attr => (
               <el-form-item label={`${attr.name}: `}>
@@ -90,28 +98,34 @@ export default class App extends Vue {
                 }
               </el-form-item>
             )) }
-            <el-button type="success" onClick={() => {
-              if (this.selectedComponent && this.focusedComponent) {
-                this.selectedComponent.parent = this.focusedComponent;
-                this.focusedComponent.children.push(this.selectedComponent);
-                if (this.selectedComponent.name.includes('容器')) {
-                  this.focusedComponent = this.selectedComponent;
-                }
-                if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
-                  this.selectedComponent = null;
-                  this.value = '';
-                } else if (this.focusedComponent.name === '表单项 (容器)' && this.focusedComponent.children.length > 0) {
-                  this.focusedComponent = this.focusedComponent.parent!;
+            <div class="flex center end">
+              <el-button type="success" onClick={() => {
+                if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
+                  this.selectedComponent.parent = this.focusedComponent;
+                  this.focusedComponent.children.push(this.selectedComponent);
+                  if (this.selectedComponent.name.includes('容器')) {
+                    this.focusedComponent = this.selectedComponent;
+                  }
+                  if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
+                    this.selectedComponent = null;
+                    this.value = '';
+                  } else if (this.focusedComponent.name === '表单项 (容器)' && this.focusedComponent.children!.length > 0) {
+                    this.focusedComponent = this.focusedComponent.parent!;
+                  } else {
+                    this.selectedComponent = clone(this.value);
+                    this.selectedComponent!.cid = cid++;
+                  }
+                } else if (this.focusedComponent && !this.focusedComponent.children) {
+                  Message.warning('当前的焦点组件不允许添加子元素');
                 } else {
-                  this.selectedComponent = clone(this.value);
+                  Message.warning('请选择组件');
                 }
-              } else {
-                Message.warning('请选择组件');
-              }
-            }}>确定</el-button>
+              }}>确定</el-button>
+            </div>
           </el-form>
-          <el-form label-width="80px">
+          <el-form label-width="120px" label-position="left">
             <h1>修改焦点元素</h1>
+            { this.focusedComponent && <el-form-item label="组件名称: ">{this.focusedComponent.name}</el-form-item> }
             { this.focusedComponent && this.focusedComponent.text !== undefined &&
               <el-form-item label="文本: ">
                 <el-input v-model={this.focusedComponent.text} placeholder="请输入文本"></el-input>
@@ -153,6 +167,9 @@ export default class App extends Vue {
         <div id="render-area">
           { genNode.call(this, h, this.renderTree) }
         </div>
+        <el-dialog visible={this.previewDialog} on={{ 'update:visible': (e: boolean) => this.previewDialog = e }}>
+         <pre class="code">{this.previewCode}</pre>
+        </el-dialog>
       </div>
     )
   }
@@ -185,7 +202,7 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
     props: { ...props, value: '' },
     attrs: { ...attrs, id: meta.cid && meta.cid.toString() },
     class: classList ? classList.concat([focusClass]) : [focusClass],
-    style: { ...parseStyle(styleStr), padding: '5px' },
+    style: { ...parseStyle(styleStr), minHeight: '40px' },
     ...(meta.tag.startsWith('el') ? {
       nativeOn: {
         click: (e: MouseEvent) => {
@@ -215,10 +232,7 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
         },
       },
     })
-  }, [meta.text, ...meta.children.map(child => genNode.call(this, h, child))]);
-  if (meta.tag === 'el-table-column') {
-    console.log(vnode);
-  }
+  }, [meta.text, ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : [])]);
   return vnode;
 }
 function parseStyle(str: string) {
@@ -247,15 +261,18 @@ function parseStyle(str: string) {
     background-color: #faf3f7;
     padding: 10px;
     color: #333;
+    overflow: auto;
     h1 {
-      text-align: center;
-      margin-bottom: 22px;
+      padding: 11px 0;
+      margin: 11px 0;
       font-size: 1.5rem;
+      border-bottom: 1px solid #ddd;
     }
     h2 {
-      text-align: center;
-      margin-bottom: 22px;
+      padding-bottom: 11px;
+      margin-bottom: 11px;
       font-size: 1.1rem;
+      border-bottom: 1px solid #ddd;
     }
   }
   #render-area {
@@ -272,9 +289,6 @@ function parseStyle(str: string) {
 }
 .flex {
   display: flex;
-  &:not(#app) {
-    background-color: #eee;
-  }
   &.center {
     align-items: center;
     justify-content: center;
@@ -308,5 +322,12 @@ function parseStyle(str: string) {
 }
 .focus {
   border: 2px solid #0ae!important;
+}
+.code {
+  padding: 20px 10px;
+  min-height: 50vh;
+  font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+  color: #333;
+  overflow: auto;
 }
 </style>
