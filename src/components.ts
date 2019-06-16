@@ -177,6 +177,7 @@ export const components: IComponent[] = [{
       key: 'icon',
       value: '',
       options: [
+        { name: '无', value: '' },
         { name: '×', value: 'el-icon-close' },
         { name: '× - 圆圈', value: 'el-icon-circle-close' },
         { name: '√', value: 'el-icon-check' },
@@ -189,7 +190,7 @@ export const components: IComponent[] = [{
         { name: 'v', value: 'el-icon-arrow-down' },
         { name: '↑', value: 'el-icon-top' },
         { name: '↓', value: 'el-icon-bottom' },
-        { name: '←', value: 'el-icon-left' },
+        { name: '←', value: 'el-icon-back' },
         { name: '→', value: 'el-icon-right' },
         { name: '-', value: 'el-icon-minus' },
         { name: '+', value: 'el-icon-plus' },

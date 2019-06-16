@@ -11,7 +11,11 @@ export function genTag(comp: IComponent, indent = 2) {
   }
   if (comp.kv.props) {
     for (const prop of comp.kv.props) {
-      if (prop.value === prop.default || Array.isArray(prop.value) && prop.value.join('') === '') {
+      if (
+        prop.value === prop.default ||
+        Array.isArray(prop.value) && prop.value.join('') === '' ||
+        prop.key.startsWith('v-') && !prop.value
+      ) {
         continue;
       }
       tag += typeof prop.value === 'boolean' ?
@@ -24,9 +28,6 @@ export function genTag(comp: IComponent, indent = 2) {
     }
   }
   if (comp.children && comp.children) {
-    if (comp.tag === 'el-option') {
-      console.log(comp);
-    }
     tag += '>';
     if (comp.children.length > 0) {
       tag += '\n';

@@ -61,20 +61,57 @@ export default class App extends Vue {
   save() {
     localStorage.setItem('latest-render-tree', JSON.stringify(this.renderTree));
   }
+  append() {
+    if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
+      this.selectedComponent.parent = this.focusedComponent;
+      this.selectedComponent.path = genPath(this.selectedComponent);
+      this.focusedComponent.children.push(this.selectedComponent);
+      Message.success(`组件【${this.selectedComponent.name}】添加成功`);
+      if (this.selectedComponent.name.includes('容器')) {
+        this.focusedComponent = this.selectedComponent;
+      }
+      if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
+        this.selectedComponent = null;
+        this.value = '';
+      } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
+        this.focusedComponent = this.focusedComponent.parent!;
+        this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
+        this.selectedComponent!.cid = cid++;
+      } else {
+        this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
+        this.selectedComponent!.cid = cid++;
+      }
+    } else if (this.focusedComponent && !this.focusedComponent.children) {
+      Message.warning('当前的焦点组件不允许添加子元素');
+    } else if (!this.selectedComponent) {
+      Message.warning('请选择组件');
+    } else if (!this.focusedComponent) {
+      Message.warning('请选择焦点组件');
+    }
+  }
+  preview() {
+    const code = genTag(this.renderTree);
+    this.previewCode = code;
+    this.previewDialog = true;
+  }
   render (h: CreateElement) {
     return (
       <div id="app" class="flex">
         <power-scrollbar style="width: 330px">
           <div id="menubar">
             <div class="flex center between">
-              <el-input style="width: 210px" v-model={this.fileName} placeholder="组件名字 (单词之间用-分隔)"></el-input>
-              <el-button type="primary" onClick={() => {
-                const code = genTag(this.renderTree);
-                this.previewCode = code;
-                this.previewDialog = true;
-              }}>预览</el-button>
+              <el-input style="width: 210px" v-model={this.fileName} placeholder="组件名字 (单词之间用-分隔)" nativeOn={{
+                keydown: (e: KeyboardEvent) => {
+                  e.key === 'Enter' && this.preview()
+                }
+              }}></el-input>
+              <el-button type="primary" onClick={this.preview.bind(this)}>预览</el-button>
             </div>
-            <el-form label-width="120px" label-position="left">
+            <el-form label-width="120px" label-position="left" nativeOn={{
+                keydown: (e: KeyboardEvent) => {
+                  e.key === 'Enter' && this.append()
+                }
+              }}>
               <h1>增加子元素</h1>
               <el-form-item label="组件：">
                 <el-select v-model={this.value} onChange={(e: any) => {
@@ -149,33 +186,7 @@ export default class App extends Vue {
                 </el-form-item>
               )) }
               <div class="flex center end">
-                <el-button type="success" onClick={() => {
-                  if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
-                    this.selectedComponent.parent = this.focusedComponent;
-                    this.selectedComponent.path = genPath(this.selectedComponent);
-                    this.focusedComponent.children.push(this.selectedComponent);
-                    if (this.selectedComponent.name.includes('容器')) {
-                      this.focusedComponent = this.selectedComponent;
-                    }
-                    if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
-                      this.selectedComponent = null;
-                      this.value = '';
-                    } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
-                      this.focusedComponent = this.focusedComponent.parent!;
-                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
-                      this.selectedComponent!.cid = cid++;
-                    } else {
-                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
-                      this.selectedComponent!.cid = cid++;
-                    }
-                  } else if (this.focusedComponent && !this.focusedComponent.children) {
-                    Message.warning('当前的焦点组件不允许添加子元素');
-                  } else if (!this.selectedComponent) {
-                    Message.warning('请选择组件');
-                  } else if (!this.focusedComponent) {
-                    Message.warning('请选择焦点组件');
-                  }
-                }}>确定</el-button>
+                <el-button type="success" onClick={this.append.bind(this)}>确定</el-button>
               </div>
             </el-form>
             <el-form label-width="120px" label-position="left">
