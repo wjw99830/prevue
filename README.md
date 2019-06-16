@@ -1,2 +1,2 @@
 # Prevue
-With the goal of making ui configurable using Vue.
+preview a vue page with configure
