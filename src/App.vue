@@ -120,6 +120,7 @@ export default class App extends Vue {
               <el-button type="success" onClick={() => {
                 if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
                   this.selectedComponent.parent = this.focusedComponent;
+                  this.selectedComponent.path = genPath(this.selectedComponent);
                   this.focusedComponent.children.push(this.selectedComponent);
                   if (this.selectedComponent.name.includes('容器')) {
                     this.focusedComponent = this.selectedComponent;

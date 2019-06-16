@@ -18,6 +18,10 @@ export interface IComponent {
   text?: string;
   cid?: number;
   parent?: IComponent;
+  path?: Array<{
+    label: string;
+    component: IComponent;
+  }>;
 }
 export const components: IComponent[] = [{
   name: '通用 (容器)',
