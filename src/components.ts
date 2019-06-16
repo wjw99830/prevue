@@ -91,6 +91,38 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
+  name: '表格 (容器)',
+  tag: 'el-table',
+  children: [],
+  kv: {
+    props: [{
+      name: '斑马纹',
+      key: 'stripe',
+      value: false,
+      default: false,
+    }],
+  },
+}, {
+  name: '表格列',
+  tag: 'el-table-column',
+  kv: {
+    props: [{
+      name: '列名',
+      key: 'label',
+      value: '',
+    }, {
+      name: '对齐方式',
+      key: 'align',
+      value: '',
+      default: '',
+      options: [
+        { name: '居中', value: 'center' },
+        { name: '左对齐', value: 'left' },
+        { name: '右对齐', value: 'right' },
+      ],
+    }],
+  }
+}, {
   name: '按钮',
   tag: 'el-button',
   text: '按钮',
@@ -169,38 +201,6 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '表格 (容器)',
-  tag: 'el-table',
-  children: [],
-  kv: {
-    props: [{
-      name: '斑马纹',
-      key: 'stripe',
-      value: false,
-      default: false,
-    }],
-  },
-}, {
-  name: '表格列',
-  tag: 'el-table-column',
-  kv: {
-    props: [{
-      name: '列名',
-      key: 'label',
-      value: '',
-    }, {
-      name: '对齐方式',
-      key: 'align',
-      value: '',
-      default: '',
-      options: [
-        { name: '居中', value: 'center' },
-        { name: '左对齐', value: 'left' },
-        { name: '右对齐', value: 'right' },
-      ],
-    }],
-  }
-}, {
   name: '选择器',
   tag: 'el-select',
   children: [{
@@ -237,6 +237,11 @@ export const components: IComponent[] = [{
 }, {
   name: '单选框',
   tag: 'el-radio',
+  text: '',
+  kv: {},
+}, {
+  name: '纯文本',
+  tag: 'span',
   text: '',
   kv: {},
 }];

@@ -57,142 +57,144 @@ export default class App extends Vue {
   render (h: CreateElement) {
     return (
       <div id="app" class="flex">
-        <div id="menubar">
-          <div class="flex center end">
-            <el-button type="primary" onClick={() => {
-              const code = genTag(this.renderTree);
-              this.previewCode = code;
-              this.previewDialog = true;
-            }}>预览Vue文件</el-button>
-          </div>
-          <el-form label-width="120px" label-position="left">
-            <h1>增加子元素</h1>
-            <el-form-item label="组件：">
-              <el-select v-model={this.value} onChange={(e: any) => {
-                  this.selectedComponent = clone(e);
-                  this.selectedComponent!.cid = cid++;
-                }} value-key="name" placeholder="请选择">
-                { components.filter(comp => {
-                  if (this.focusedComponent) {
-                    if (this.focusedComponent.name === '表格 (容器)') {
-                      return comp.name === '表格列';
-                    } else if (this.focusedComponent.name === '表单 (容器)') {
-                      return comp.name === '表单项 (容器)';
+        <power-scrollbar style="width: 330px">
+          <div id="menubar">
+            <div class="flex center end">
+              <el-button type="primary" onClick={() => {
+                const code = genTag(this.renderTree);
+                this.previewCode = code;
+                this.previewDialog = true;
+              }}>预览Vue文件</el-button>
+            </div>
+            <el-form label-width="120px" label-position="left">
+              <h1>增加子元素</h1>
+              <el-form-item label="组件：">
+                <el-select v-model={this.value} onChange={(e: any) => {
+                    this.selectedComponent = clone(e);
+                    this.selectedComponent!.cid = cid++;
+                  }} value-key="name" placeholder="请选择">
+                  { components.filter(comp => {
+                    if (this.focusedComponent) {
+                      if (this.focusedComponent.name === '表格 (容器)') {
+                        return comp.name === '表格列';
+                      } else if (this.focusedComponent.name === '表单 (容器)') {
+                        return comp.name === '表单项 (容器)';
+                      } else if (this.focusedComponent.name !== 'el-form' && comp.tag === 'el-form-item' || this.focusedComponent.name !== 'el-table' && comp.tag === 'el-table-column') {
+                        return false;
+                      }
                     }
                     return true;
-                  }
-                }).map((comp) => <el-option key={comp.name} label={comp.name} value={comp}></el-option>) }
-              </el-select>
-            </el-form-item>
-            { this.selectedComponent && typeof this.selectedComponent.text !== 'undefined' &&
-              <el-form-item label="文本">
-                <el-input v-model={this.selectedComponent.text} placeholder="请输入文本"></el-input>
+                  }).map((comp) => <el-option key={comp.name} label={comp.name} value={comp}></el-option>) }
+                </el-select>
               </el-form-item>
-            }
-            { this.selectedComponent && this.selectedComponent.kv.attrs && <h2>Attrs</h2> }
-            { this.selectedComponent && this.selectedComponent.kv.attrs && this.selectedComponent.kv.attrs.map(attr => (
-              <el-form-item label={`${attr.name}: `}>
-                {
-                  attr.options ? 
-                    <el-select v-model={attr.value} multiple={!!attr.multiple} placeholder="请选择">
-                      { attr.options.map(option => <el-option key={option.name} label={option.name} value={option.value} disabled={option.disabled}></el-option>) }
-                    </el-select>
-                    :
-                    <el-input v-model={attr.value} placeholder="请输入"></el-input>
-                }
-              </el-form-item>
-            )) }
-            { this.selectedComponent && this.selectedComponent.kv.props && <h2>Props</h2> }
-            { this.selectedComponent && this.selectedComponent.kv.props && this.selectedComponent.kv.props.map(prop => (
-              <el-form-item label={`${prop.name}: `}>
-                {
-                  prop.options ?
-                    <el-select v-model={prop.value} multiple={!!prop.multiple} placeholder="请选择">
-                      { prop.options.map(option => <el-option key={option.name} label={option.name} value={option.value}></el-option>) }
-                    </el-select>
-                    :
-                    typeof prop.value === 'boolean' ?
-                      <el-switch v-model={prop.value}>{prop.name}</el-switch>
+              { this.selectedComponent && typeof this.selectedComponent.text !== 'undefined' &&
+                <el-form-item label="文本">
+                  <el-input v-model={this.selectedComponent.text} placeholder="请输入文本"></el-input>
+                </el-form-item>
+              }
+              { this.selectedComponent && this.selectedComponent.kv.attrs && this.selectedComponent.kv.attrs.map(attr => (
+                <el-form-item label={`${attr.name}: `}>
+                  {
+                    attr.options ? 
+                      <el-select v-model={attr.value} multiple={!!attr.multiple} placeholder="请选择">
+                        { attr.options.map(option => <el-option key={option.name} label={option.name} value={option.value} disabled={option.disabled}></el-option>) }
+                      </el-select>
                       :
-                      <el-input v-model={prop.value} placeholder="请输入"></el-input>
-                }
-              </el-form-item>
-            )) }
-            <div class="flex center end">
-              <el-button type="success" onClick={() => {
-                if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
-                  this.selectedComponent.parent = this.focusedComponent;
-                  this.selectedComponent.path = genPath(this.selectedComponent);
-                  this.focusedComponent.children.push(this.selectedComponent);
-                  if (this.selectedComponent.name.includes('容器')) {
-                    this.focusedComponent = this.selectedComponent;
+                      <el-input v-model={attr.value} placeholder="请输入"></el-input>
                   }
-                  if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
-                    this.selectedComponent = null;
-                    this.value = '';
-                  } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
-                    this.focusedComponent = this.focusedComponent.parent!;
-                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
-                    this.selectedComponent!.cid = cid++;
-                  } else {
-                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
-                    this.selectedComponent!.cid = cid++;
-                  }
-                } else if (this.focusedComponent && !this.focusedComponent.children) {
-                  Message.warning('当前的焦点组件不允许添加子元素');
-                } else {
-                  Message.warning('请选择组件');
-                }
-              }}>确定</el-button>
-            </div>
-          </el-form>
-          <el-form label-width="120px" label-position="left">
-            <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => this.focusedComponent = this.focusedComponent!.parent!}>聚焦父容器</el-button> }</h1>
-            { this.focusedComponent &&
-              <el-form-item label="路径：">
-                { this.focusedComponent.path!.map((comp, index) => <span class="path" onMouseenter={() => this.hoverComponent = comp} onMouseleave={() => this.hoverComponent = null} onClick={() => this.focusedComponent = comp}>{index === 0 ? '' : '>'} {comp.name}</span>) }
-                <span class="path" onMouseenter={() => this.hoverComponent = this.focusedComponent} onMouseleave={() => this.hoverComponent = null}> {this.focusedComponent.path!.length > 0 ? '>' : ''} {this.focusedComponent.name}</span>
-              </el-form-item>
-            }
-            { this.focusedComponent && <el-form-item label="组件名称：">{this.focusedComponent.name}</el-form-item> }
-            { this.focusedComponent && this.focusedComponent.text !== undefined &&
-              <el-form-item label="文本：">
-                <el-input v-model={this.focusedComponent.text} placeholder="请输入文本"></el-input>
-              </el-form-item>
-            }
-            { this.focusedComponent && this.focusedComponent.kv.attrs && <h2>Attrs</h2> }
-            { this.focusedComponent && this.focusedComponent.kv.attrs && this.focusedComponent.kv.attrs.map(attr => {
-              return <el-form-item label={`${attr.name}: `}>
-                {
-                  attr.options ?
-                    <el-select v-model={attr.value} multiple={!!attr.multiple} placeholder="请选择">
-                      { attr.options.map(option => {
-                          return <el-option key={option.name} label={option.name} value={option.value} disabled={option.disabled}></el-option>
-                        }) }
-                    </el-select>
-                    :
-                    <el-input v-model={attr.value} placeholder="请输入"></el-input>
-                }
-              </el-form-item>
-            }) }
-            { this.focusedComponent && this.focusedComponent.kv.props && <h2>Props</h2> }
-            { this.focusedComponent && this.focusedComponent.kv.props && this.focusedComponent.kv.props.map(prop => (
-              <el-form-item label={`${prop.name}: `}>
-                {
-                  prop.options ? 
-                    <el-select v-model={prop.value} multiple={!!prop.multiple} placeholder="请选择">
-                      { prop.options.map(option => <el-option key={option.name} label={option.name} value={option.value}></el-option>) }
-                    </el-select>
-                    :
-                    typeof prop.value === 'boolean' ?
-                      <el-switch v-model={prop.value}>{prop.name}</el-switch>
+                </el-form-item>
+              )) }
+              { this.selectedComponent && this.selectedComponent.kv.props && this.selectedComponent.kv.props.map(prop => (
+                <el-form-item label={`${prop.name}: `}>
+                  {
+                    prop.options ?
+                      <el-select v-model={prop.value} multiple={!!prop.multiple} placeholder="请选择">
+                        { prop.options.map(option => <el-option key={option.name} label={option.name} value={option.value}></el-option>) }
+                      </el-select>
                       :
-                      <el-input v-model={prop.value} placeholder="请输入"></el-input>
-                }
-              </el-form-item>
-            )) }
-          </el-form>
-        </div>
+                      typeof prop.value === 'boolean' ?
+                        <el-switch v-model={prop.value}>{prop.name}</el-switch>
+                        :
+                        <el-input v-model={prop.value} placeholder="请输入"></el-input>
+                  }
+                </el-form-item>
+              )) }
+              <div class="flex center end">
+                <el-button type="success" onClick={() => {
+                  if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
+                    this.selectedComponent.parent = this.focusedComponent;
+                    this.selectedComponent.path = genPath(this.selectedComponent);
+                    this.focusedComponent.children.push(this.selectedComponent);
+                    if (this.selectedComponent.name.includes('容器')) {
+                      this.focusedComponent = this.selectedComponent;
+                    }
+                    if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
+                      this.selectedComponent = null;
+                      this.value = '';
+                    } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
+                      this.focusedComponent = this.focusedComponent.parent!;
+                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
+                      this.selectedComponent!.cid = cid++;
+                    } else {
+                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
+                      this.selectedComponent!.cid = cid++;
+                    }
+                  } else if (this.focusedComponent && !this.focusedComponent.children) {
+                    Message.warning('当前的焦点组件不允许添加子元素');
+                  } else if (!this.selectedComponent) {
+                    Message.warning('请选择组件');
+                  } else if (!this.focusedComponent) {
+                    Message.warning('请选择焦点组件');
+                  }
+                }}>确定</el-button>
+              </div>
+            </el-form>
+            <el-form label-width="120px" label-position="left">
+              <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => this.focusedComponent = this.focusedComponent!.parent!}>聚焦父容器</el-button> }</h1>
+              { this.focusedComponent &&
+                <el-form-item label="路径：">
+                  { this.focusedComponent.path!.map((comp, index) => <span class="path" onMouseenter={() => this.hoverComponent = comp} onMouseleave={() => this.hoverComponent = null} onClick={() => this.focusedComponent = comp}>{index === 0 ? '' : '>'} {comp.name}</span>) }
+                  <span class="path" onMouseenter={() => this.hoverComponent = this.focusedComponent} onMouseleave={() => this.hoverComponent = null}> {this.focusedComponent.path!.length > 0 ? '>' : ''} {this.focusedComponent.name}</span>
+                </el-form-item>
+              }
+              { this.focusedComponent && <el-form-item label="组件名称：">{this.focusedComponent.name}</el-form-item> }
+              { this.focusedComponent && this.focusedComponent.text !== undefined &&
+                <el-form-item label="文本：">
+                  <el-input v-model={this.focusedComponent.text} placeholder="请输入文本"></el-input>
+                </el-form-item>
+              }
+              { this.focusedComponent && this.focusedComponent.kv.attrs && this.focusedComponent.kv.attrs.map(attr => {
+                return <el-form-item label={`${attr.name}: `}>
+                  {
+                    attr.options ?
+                      <el-select v-model={attr.value} multiple={!!attr.multiple} placeholder="请选择">
+                        { attr.options.map(option => {
+                            return <el-option key={option.name} label={option.name} value={option.value} disabled={option.disabled}></el-option>
+                          }) }
+                      </el-select>
+                      :
+                      <el-input v-model={attr.value} placeholder="请输入"></el-input>
+                  }
+                </el-form-item>
+              }) }
+              { this.focusedComponent && this.focusedComponent.kv.props && this.focusedComponent.kv.props.map(prop => (
+                <el-form-item label={`${prop.name}: `}>
+                  {
+                    prop.options ? 
+                      <el-select v-model={prop.value} multiple={!!prop.multiple} placeholder="请选择">
+                        { prop.options.map(option => <el-option key={option.name} label={option.name} value={option.value}></el-option>) }
+                      </el-select>
+                      :
+                      typeof prop.value === 'boolean' ?
+                        <el-switch v-model={prop.value}>{prop.name}</el-switch>
+                        :
+                        <el-input v-model={prop.value} placeholder="请输入"></el-input>
+                  }
+                </el-form-item>
+              )) }
+            </el-form>
+          </div>
+        </power-scrollbar>
         <div id="render-area">
           { genNode.call(this, h, this.renderTree) }
         </div>
@@ -286,11 +288,10 @@ function parseStyle(str: string) {
   width: 100%;
   overflow: hidden;
   #menubar {
-    width: 330px;
     background-color: #faf3f7;
     padding: 10px;
+    padding-right: 27px;
     color: #333;
-    overflow: auto;
     h1 {
       padding: 11px 0;
       margin: 11px 0;
@@ -357,6 +358,7 @@ function parseStyle(str: string) {
 }
 .overlay {
   position: absolute!important;
+  z-index: 2;
   background-color: rgba(109, 195, 252, 0.801);
   color: #fff;
   top: 0;
