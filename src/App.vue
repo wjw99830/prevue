@@ -3,7 +3,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import { CreateElement, VNode, VNodeChildren } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import { Message } from 'element-ui';
-import { genTag, genPath } from '@/utils';
+import { genTag, genPath, genVueCode } from '@/utils';
 import { components, IComponent } from './components';
 let cid = 0;
 @Component
@@ -11,6 +11,7 @@ export default class App extends Vue {
   value='';
   previewDialog = false;
   previewCode = '';
+  fileName = '';
   hoverComponent: IComponent | null = null;
   selectedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
@@ -36,6 +37,12 @@ export default class App extends Vue {
         multiple: true,
         default: '',
       }],
+      props: [{
+        name: 'v-loading',
+        key: 'v-loading',
+        value: '',
+        valueType: 'boolean',
+      }],
     },
     children: [],
     cid: cid++,
@@ -59,12 +66,13 @@ export default class App extends Vue {
       <div id="app" class="flex">
         <power-scrollbar style="width: 330px">
           <div id="menubar">
-            <div class="flex center end">
+            <div class="flex center between">
+              <el-input style="width: 210px" v-model={this.fileName} placeholder="组件名字 (单词之间用-分隔)"></el-input>
               <el-button type="primary" onClick={() => {
                 const code = genTag(this.renderTree);
                 this.previewCode = code;
                 this.previewDialog = true;
-              }}>预览Vue文件</el-button>
+              }}>预览</el-button>
             </div>
             <el-form label-width="120px" label-position="left">
               <h1>增加子元素</h1>
@@ -76,10 +84,31 @@ export default class App extends Vue {
                   { components.filter(comp => {
                     if (this.focusedComponent) {
                       if (this.focusedComponent.name === '表格 (容器)') {
+                        const flag = comp.name === '表格列';
+                        if (flag && this.selectedComponent && this.selectedComponent.tag !== 'el-table-column') {
+                          this.selectedComponent = null;
+                          this.value = '';
+                        }
                         return comp.name === '表格列';
                       } else if (this.focusedComponent.name === '表单 (容器)') {
+                        const flag = comp.name === '表单项 (容器)';
+                        if (flag && this.selectedComponent && this.selectedComponent.tag !== 'el-form-item') {
+                          this.selectedComponent = null;
+                          this.value = '';
+                        }
                         return comp.name === '表单项 (容器)';
-                      } else if (this.focusedComponent.name !== 'el-form' && comp.tag === 'el-form-item' || this.focusedComponent.name !== 'el-table' && comp.tag === 'el-table-column') {
+                      } else if (this.focusedComponent.tag === 'el-select') {
+                        const flag = comp.tag === 'el-option';
+                        if (flag && this.selectedComponent && this.selectedComponent.tag !== 'el-option') {
+                          this.selectedComponent = null;
+                          this.value = '';
+                        }
+                        return comp.tag === 'el-option';
+                      } else if (
+                        this.focusedComponent.tag !== 'el-form' && comp.tag === 'el-form-item' ||
+                        this.focusedComponent.tag !== 'el-table' && comp.tag === 'el-table-column' ||
+                        this.focusedComponent.tag !== 'el-select' && comp.tag === 'el-option'
+                      ) {
                         return false;
                       }
                     }
@@ -133,10 +162,10 @@ export default class App extends Vue {
                       this.value = '';
                     } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
                       this.focusedComponent = this.focusedComponent.parent!;
-                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
+                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
                       this.selectedComponent!.cid = cid++;
                     } else {
-                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
+                      this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
                       this.selectedComponent!.cid = cid++;
                     }
                   } else if (this.focusedComponent && !this.focusedComponent.children) {
@@ -199,7 +228,9 @@ export default class App extends Vue {
           { genNode.call(this, h, this.renderTree) }
         </div>
         <el-dialog visible={this.previewDialog} on={{ 'update:visible': (e: boolean) => this.previewDialog = e }}>
-         <pre class="code">{this.previewCode}</pre>
+          <power-scrollbar style="height: 50vh;">
+            <pre class="code">{genVueCode(this.previewCode, this.fileName, this.renderTree)}</pre>
+          </power-scrollbar>
         </el-dialog>
       </div>
     )
@@ -230,7 +261,7 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
   delete attrs.style;
   const focusClass = this.focusedComponent && this.focusedComponent.cid === meta!.cid ? 'focus' : '';
   const vnode: VNode = h(meta.tag, {
-    props: { ...props, value: '' },
+    props: { ...props, ...(props.value ? {} : { value: '' }) },
     attrs: { ...attrs, id: meta.cid && meta.cid.toString() },
     class: classList ? classList.concat([focusClass]) : [focusClass],
     style: { ...parseStyle(styleStr), minHeight: '40px' },
@@ -307,7 +338,7 @@ function parseStyle(str: string) {
   }
   #render-area {
     width: calc(100% - 330px);
-    * {
+    *[id] {
       position: relative;
     }
   }
@@ -368,10 +399,9 @@ function parseStyle(str: string) {
 }
 .code {
   padding: 20px 10px;
-  min-height: 50vh;
+  padding-right: 27px;
   font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
   color: #333;
-  overflow: auto;
 }
 .path {
   color: #0ae;

@@ -6,6 +6,7 @@ export interface IField {
   multiple?: boolean;
   dynamic?: boolean;
   default?: any;
+  valueType?: string;
 }
 export interface IComponent {
   name: string;
@@ -41,6 +42,12 @@ export const components: IComponent[] = [{
       ],
       multiple: true,
     }],
+    props: [{
+      name: 'v-loading',
+      key: 'v-loading',
+      value: '',
+      valueType: 'boolean',
+    }],
   },
   children: [],
 }, {
@@ -73,8 +80,13 @@ export const components: IComponent[] = [{
     }, {
       name: '标签对齐方式',
       key: 'label-position',
-      value: 'right',
-      default: '',
+      value: 'left',
+      options: [
+        { name: '居中', value: 'center' },
+        { name: '左对齐', value: 'left' },
+        { name: '右对齐', value: 'right' },
+      ],
+      default: 'right',
     }],
   },
 }, {
@@ -164,6 +176,35 @@ export const components: IComponent[] = [{
       name: '图标',
       key: 'icon',
       value: '',
+      options: [
+        { name: '×', value: 'el-icon-close' },
+        { name: '× - 圆圈', value: 'el-icon-circle-close' },
+        { name: '√', value: 'el-icon-check' },
+        { name: '√ - 圆圈', value: 'el-icon-circle-check' },
+        { name: '<', value: 'el-icon-arrow-left' },
+        { name: '<<', value: 'el-icon-d-arrow-left' },
+        { name: '>', value: 'el-icon-arrow-right' },
+        { name: '>>', value: 'el-icon-d-arrow-right' },
+        { name: '^', value: 'el-icon-arrow-up' },
+        { name: 'v', value: 'el-icon-arrow-down' },
+        { name: '↑', value: 'el-icon-top' },
+        { name: '↓', value: 'el-icon-bottom' },
+        { name: '←', value: 'el-icon-left' },
+        { name: '→', value: 'el-icon-right' },
+        { name: '-', value: 'el-icon-minus' },
+        { name: '+', value: 'el-icon-plus' },
+        { name: '+ - 圆圈', value: 'el-icon-circle-plus' },
+        { name: '刷新', value: 'el-icon-refresh' },
+        { name: '刷新 - 左旋', value: 'el-icon-refresh-left' },
+        { name: '刷新 - 右旋', value: 'el-icon-refresh-right' },
+        { name: 'i', value: 'el-icon-info' },
+        { name: '?', value: 'el-icon-question' },
+        { name: '!', value: 'el-icon-warning-outline' },
+        { name: '! - 填充', value: 'el-icon-warning' },
+        { name: '搜索', value: 'el-icon-search' },
+        { name: '设置', value: 'el-icon-setting' },
+        { name: 'Loading', value: 'el-icon-loading' },
+      ],
       default: '',
     }],
   },
@@ -171,7 +212,12 @@ export const components: IComponent[] = [{
   name: '输入框',
   tag: 'el-input',
   kv: {
-    props: [],
+    props: [{
+      name: '绑定一个变量',
+      key: 'v-model',
+      value: '',
+      valueType: 'string',
+    }],
     attrs: [{
       name: 'css样式',
       key: 'style',
@@ -198,29 +244,17 @@ export const components: IComponent[] = [{
       key: 'active-text',
       value: '开',
       default: '',
+    }, {
+      name: '绑定一个变量',
+      key: 'v-model',
+      value: '',
+      valueType: 'string',
     }],
   },
 }, {
   name: '选择器',
   tag: 'el-select',
-  children: [{
-    name: '选项',
-    children: [],
-    tag: 'el-option',
-    kv: {
-      props: [{
-        name: '选项标签',
-        key: 'label',
-        value: `'选项1'`,
-        dynamic: true,
-      }, {
-        name: '选项值',
-        key: 'value',
-        value: '',
-        dynamic: true,
-      }],
-    },
-  }],
+  children: [],
   kv: {
     attrs: [{
       name: '占位符',
@@ -228,17 +262,53 @@ export const components: IComponent[] = [{
       value: '请选择',
       default: '',
     }],
+    props: [{
+      name: '绑定一个变量',
+      key: 'v-model',
+      value: '',
+      valueType: 'string',
+    }],
+  },
+}, {
+  name: '选择器 - 选项',
+  tag: 'el-option',
+  kv: {
+    props: [{
+      name: '选项名字',
+      key: 'label',
+      value: '',
+      dynamic: true,
+    }, {
+      name: '选项值',
+      key: 'value',
+      value: '',
+      dynamic: true,
+    }],
   },
 }, {
   name: '多选框',
   tag: 'el-checkbox',
   text: '',
-  kv: {},
+  kv: {
+    props: [{
+      name: '绑定一个变量',
+      key: 'v-model',
+      value: '',
+      valueType: 'boolean',
+    }],
+  },
 }, {
   name: '单选框',
   tag: 'el-radio',
   text: '',
-  kv: {},
+  kv: {
+    props: [{
+      name: '绑定一个变量',
+      key: 'v-model',
+      value: '',
+      valueType: 'string',
+    }],
+  },
 }, {
   name: '纯文本',
   tag: 'span',

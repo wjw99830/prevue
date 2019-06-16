@@ -1,5 +1,5 @@
-import { IComponent } from '@/components';
-export function genTag(comp: IComponent, indent = 0) {
+import { IComponent, IField } from '@/components';
+export function genTag(comp: IComponent, indent = 2) {
   let tag = `${' '.repeat(indent)}<${comp.tag}`;
   if (comp.kv.attrs) {
     for (const attr of comp.kv.attrs) {
@@ -23,15 +23,26 @@ export function genTag(comp: IComponent, indent = 0) {
           ` ${prop.key}="${prop.value}"`;
     }
   }
-  if (comp.children && comp.children.length > 0) {
-    tag += '>\n';
+  if (comp.children && comp.children) {
+    if (comp.tag === 'el-option') {
+      console.log(comp);
+    }
+    tag += '>';
+    if (comp.children.length > 0) {
+      tag += '\n';
+    }
+    if (comp.text) {
+      tag += comp.children.length > 0 ? `${' '.repeat(indent + 2)}${comp.text}\n` : `${comp.text}`;
+    }
     for (const child of comp.children) {
       tag += genTag(child, indent + 2);
     }
-    tag += ' '.repeat(indent);
+    if (comp.children.length > 0) {
+      tag += ' '.repeat(indent);
+    }
     tag += `</${comp.tag}>`;
-  } else if (comp.children && comp.children.length === 0) {
-    tag += `></${comp.tag}>`;
+  } else if (!comp.children && comp.text !== undefined) {
+    tag += `>${comp.text}</${comp.tag}>`;
   } else {
     tag += ' />';
   }
@@ -41,8 +52,57 @@ export function genTag(comp: IComponent, indent = 0) {
 export function genPath(comp: IComponent): IComponent[] {
   const parent = comp.parent;
   if (parent) {
-    return [parent, ...genPath(parent)];
+    return [...genPath(parent), parent];
   } else {
     return [];
   }
+}
+export function genVueCode(
+  templateCode: string, 
+  fileName: string,
+  renderTree: IComponent,
+) {
+  const pascal = fileName.split('-').map(word => {
+    if (!word) {
+      return '';
+    }
+    const firstLetter = word[0].toUpperCase();
+    return firstLetter + word.slice(1);
+  }).join('');
+  const directiveProps = filter(renderTree, (prop) => prop.key.startsWith('v-') && prop.value);
+  const existingFields: string[] = [];
+  const valueMap: Record<string, string> = {
+    string: `''`,
+    boolean: 'false',
+    array: '[]',
+  };
+  const fields = directiveProps.map(prop => {
+    if (existingFields.includes(prop.value)) {
+      return '';
+    }
+    existingFields.push(prop.value);
+    return `  ${prop.value} = ${valueMap[String(prop.valueType)] || 'null'};`;
+  }).filter(str => str).join('\n');
+  return `<template>
+${templateCode}</template>
+<script lang="ts">
+import { Vue, Component } from 'vue-property-decorator';
+@Component({
+  name: '${fileName || 'preview-component'}',
+})
+export default class ${pascal || 'PreviewComponent'} extends Vue {
+${fields}
+}
+</script>
+<style lang="scss">
+
+</style>
+`;
+}
+export function filter(tree: IComponent, fn: (value: IField, index: number) => boolean): IField[] {
+  let out: IField[] = [];
+  if (tree.kv.props) {
+    out = tree.kv.props.filter(fn);
+  }
+  return [...out, ...(tree.children ? tree.children.map(child => filter(child, fn)).flat() : [])];
 }
