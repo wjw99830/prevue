@@ -3,12 +3,15 @@ export function genTag(comp: IComponent, indent = 0) {
   let tag = `${' '.repeat(indent)}<${comp.tag}`;
   if (comp.kv.attrs) {
     for (const attr of comp.kv.attrs) {
+      if (attr.value === attr.default || Array.isArray(attr.value) && attr.value.join('') === '') {
+        continue;
+      }
       tag += ` ${attr.key}="${typeof attr.value === 'string' ? attr.value : attr.value.join(' ')}"`;
     }
   }
   if (comp.kv.props) {
     for (const prop of comp.kv.props) {
-      if (prop.value === prop.default) {
+      if (prop.value === prop.default || Array.isArray(prop.value) && prop.value.join('') === '') {
         continue;
       }
       tag += typeof prop.value === 'boolean' ?
@@ -26,9 +29,12 @@ export function genTag(comp: IComponent, indent = 0) {
       tag += genTag(child, indent + 2);
     }
     tag += ' '.repeat(indent);
-    tag += `</${comp.tag}>\n`;
+    tag += `</${comp.tag}>`;
+  } else if (comp.children && comp.children.length === 0) {
+    tag += `></${comp.tag}>`;
   } else {
-    tag += ' />\n';
+    tag += ' />';
   }
+  tag += '\n'
   return tag;
 }

@@ -14,9 +14,28 @@ export default class App extends Vue {
   selectedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
   renderTree: IComponent = {
-    name: '页面容器',
+    name: '通用 (容器)',
     tag: 'div',
-    kv: {},
+    kv: {
+      attrs: [{
+        name: '样式',
+        key: 'class',
+        value: [],
+        options: [
+          { name: 'Flex盒模型', value: 'flex' },
+          { name: '垂直水平居中', value: 'center' },
+          { name: '水平正排', value: 'start' },
+          { name: '水平倒排', value: 'end' },
+          { name: '水平均分空格(两边留空)', value: 'around' },
+          { name: '水平均分空格(两边不留空)', value: 'between' },
+          { name: '交换垂直和水平方向', value: 'column' },
+          { name: '内容超出时换行', value: 'wrap' },
+          { name: '为子元素设置5px的外边距', value: 'little-space' },
+        ],
+        multiple: true,
+        default: '',
+      }],
+    },
     children: [],
     cid: cid++,
   };
@@ -46,7 +65,7 @@ export default class App extends Vue {
           </div>
           <el-form label-width="120px" label-position="left">
             <h1>增加子元素</h1>
-            <el-form-item label="组件: ">
+            <el-form-item label="组件：">
               <el-select v-model={this.value} onChange={(e: any) => {
                   this.selectedComponent = clone(e);
                   this.selectedComponent!.cid = cid++;
@@ -110,10 +129,10 @@ export default class App extends Vue {
                     this.value = '';
                   } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
                     this.focusedComponent = this.focusedComponent.parent!;
-                    this.selectedComponent = clone(this.value);
+                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined });
                     this.selectedComponent!.cid = cid++;
                   } else {
-                    this.selectedComponent = clone(this.value);
+                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined });
                     this.selectedComponent!.cid = cid++;
                   }
                 } else if (this.focusedComponent && !this.focusedComponent.children) {
@@ -127,9 +146,9 @@ export default class App extends Vue {
           <el-form label-width="120px" label-position="left">
             <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => this.focusedComponent = this.focusedComponent!.parent!}>聚焦父容器</el-button> }</h1>
             
-            { this.focusedComponent && <el-form-item label="组件名称: ">{this.focusedComponent.name}</el-form-item> }
+            { this.focusedComponent && <el-form-item label="组件名称：">{this.focusedComponent.name}</el-form-item> }
             { this.focusedComponent && this.focusedComponent.text !== undefined &&
-              <el-form-item label="文本: ">
+              <el-form-item label="文本：">
                 <el-input v-model={this.focusedComponent.text} placeholder="请输入文本"></el-input>
               </el-form-item>
             }
@@ -331,5 +350,10 @@ function parseStyle(str: string) {
   font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
   color: #333;
   overflow: auto;
+}
+label.el-form-item__label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: slategray;
 }
 </style>

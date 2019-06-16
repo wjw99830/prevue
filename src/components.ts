@@ -26,9 +26,9 @@ export const components: IComponent[] = [{
     attrs: [{
       name: '样式',
       key: 'class',
-      value: ['flex'],
+      value: [],
       options: [
-        { name: 'Flex盒模型', value: 'flex', disabled: true },
+        { name: 'Flex盒模型', value: 'flex' },
         { name: '垂直水平居中', value: 'center' },
         { name: '水平正排', value: 'start' },
         { name: '水平倒排', value: 'end' },
