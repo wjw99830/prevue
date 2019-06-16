@@ -3,7 +3,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import { CreateElement, VNode, VNodeChildren } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import { Message } from 'element-ui';
-import { genTag } from '@/utils';
+import { genTag, genPath } from '@/utils';
 import { components, IComponent } from './components';
 let cid = 0;
 @Component
@@ -11,6 +11,7 @@ export default class App extends Vue {
   value='';
   previewDialog = false;
   previewCode = '';
+  hoverComponent: IComponent | null = null;
   selectedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
   renderTree: IComponent = {
@@ -38,6 +39,7 @@ export default class App extends Vue {
     },
     children: [],
     cid: cid++,
+    path: [],
   };
   created() {
     this.focusedComponent = this.renderTree;
@@ -130,10 +132,10 @@ export default class App extends Vue {
                     this.value = '';
                   } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
                     this.focusedComponent = this.focusedComponent.parent!;
-                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined });
+                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
                     this.selectedComponent!.cid = cid++;
                   } else {
-                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined });
+                    this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: [], path: undefined });
                     this.selectedComponent!.cid = cid++;
                   }
                 } else if (this.focusedComponent && !this.focusedComponent.children) {
@@ -146,7 +148,12 @@ export default class App extends Vue {
           </el-form>
           <el-form label-width="120px" label-position="left">
             <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => this.focusedComponent = this.focusedComponent!.parent!}>聚焦父容器</el-button> }</h1>
-            
+            { this.focusedComponent &&
+              <el-form-item label="路径：">
+                { this.focusedComponent.path!.map((comp, index) => <span class="path" onMouseenter={() => this.hoverComponent = comp} onMouseleave={() => this.hoverComponent = null} onClick={() => this.focusedComponent = comp}>{index === 0 ? '' : '>'} {comp.name}</span>) }
+                <span class="path" onMouseenter={() => this.hoverComponent = this.focusedComponent} onMouseleave={() => this.hoverComponent = null}> {this.focusedComponent.path!.length > 0 ? '>' : ''} {this.focusedComponent.name}</span>
+              </el-form-item>
+            }
             { this.focusedComponent && <el-form-item label="组件名称：">{this.focusedComponent.name}</el-form-item> }
             { this.focusedComponent && this.focusedComponent.text !== undefined &&
               <el-form-item label="文本：">
@@ -254,7 +261,7 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
         },
       },
     })
-  }, [meta.text, ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : [])]);
+  }, [meta.text, ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : []),  this.hoverComponent === meta ? h('div', { class: ['overlay', 'flex', 'center'] }, meta.name) : undefined]);
   return vnode;
 }
 function parseStyle(str: string) {
@@ -299,6 +306,9 @@ function parseStyle(str: string) {
   }
   #render-area {
     width: calc(100% - 330px);
+    * {
+      position: relative;
+    }
   }
 }
 </style>
@@ -345,12 +355,32 @@ function parseStyle(str: string) {
 .focus {
   border: 2px solid #0ae!important;
 }
+.overlay {
+  position: absolute!important;
+  background-color: rgba(109, 195, 252, 0.801);
+  color: #fff;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 .code {
   padding: 20px 10px;
   min-height: 50vh;
   font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
   color: #333;
   overflow: auto;
+}
+.path {
+  color: #0ae;
+  cursor: pointer;
+  transition: all .3s;
+  border-radius: 5px;
+  padding: 2px 7px;
+  &:hover {
+    background-color: #3cf;
+    color: #fff;
+  }
 }
 label.el-form-item__label {
   font-size: 1rem;

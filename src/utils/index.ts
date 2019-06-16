@@ -38,7 +38,11 @@ export function genTag(comp: IComponent, indent = 0) {
   tag += '\n'
   return tag;
 }
-export function genPath(comp: IComponent) {
+export function genPath(comp: IComponent): IComponent[] {
   const parent = comp.parent;
-  if (parent)
+  if (parent) {
+    return [parent, ...genPath(parent)];
+  } else {
+    return [];
+  }
 }
