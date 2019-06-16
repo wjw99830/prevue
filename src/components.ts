@@ -239,4 +239,9 @@ export const components: IComponent[] = [{
   tag: 'el-radio',
   text: '',
   kv: {},
+}, {
+  name: '文本',
+  tag: 'span',
+  text: '',
+  kv: {},
 }];

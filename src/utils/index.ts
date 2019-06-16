@@ -23,15 +23,23 @@ export function genTag(comp: IComponent, indent = 0) {
           ` ${prop.key}="${prop.value}"`;
     }
   }
-  if (comp.children && comp.children.length > 0) {
-    tag += '>\n';
+  if (comp.children && comp.children) {
+    tag += '>';
+    if (comp.children.length > 0) {
+      tag += '\n';
+    }
+    if (comp.text) {
+      tag += comp.children.length > 0 ? `${' '.repeat(indent + 2)}${comp.text}\n` : `${comp.text}`;
+    }
     for (const child of comp.children) {
       tag += genTag(child, indent + 2);
     }
-    tag += ' '.repeat(indent);
+    if (comp.children.length > 0) {
+      tag += ' '.repeat(indent);
+    }
     tag += `</${comp.tag}>`;
-  } else if (comp.children && comp.children.length === 0) {
-    tag += `></${comp.tag}>`;
+  } else if (!comp.children && comp.text !== undefined) {
+    tag += `>${comp.text}</${comp.tag}>`;
   } else {
     tag += ' />';
   }
@@ -41,7 +49,7 @@ export function genTag(comp: IComponent, indent = 0) {
 export function genPath(comp: IComponent): IComponent[] {
   const parent = comp.parent;
   if (parent) {
-    return [parent, ...genPath(parent)];
+    return [...genPath(parent), parent];
   } else {
     return [];
   }

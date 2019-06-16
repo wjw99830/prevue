@@ -306,7 +306,7 @@ function parseStyle(str: string) {
   }
   #render-area {
     width: calc(100% - 330px);
-    * {
+    *[id] {
       position: relative;
     }
   }
