@@ -2,7 +2,7 @@
 import { Component, Vue } from 'vue-property-decorator'
 import { CreateElement, VNode, VNodeChildren } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
-import { Message } from 'element-ui';
+import { Message, Button } from 'element-ui';
 import { genTag, genPath, genVueCode } from '@/utils';
 import { components, IComponent, ComponentName } from './components';
 import { EChartOption } from 'echarts';
@@ -15,6 +15,7 @@ export default class App extends Vue {
   fileName = '';
   hoverComponent: IComponent | null = null;
   selectedComponent: IComponent | null = null;
+  draggedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
   renderTree: IComponent = { ...clone(components[0]), cid: cid++ };
   created() {
@@ -30,32 +31,32 @@ export default class App extends Vue {
   save() {
     localStorage.setItem('latest-render-tree', JSON.stringify(this.renderTree));
   }
-  append() {
-    if (this.selectedComponent && this.focusedComponent && this.focusedComponent.children !== undefined) {
-      this.selectedComponent.parent = this.focusedComponent;
-      this.selectedComponent.path = genPath(this.selectedComponent);
-      this.focusedComponent.children.push(this.selectedComponent);
-      Message.success(`组件【${this.selectedComponent.name}】添加成功`);
-      if (this.selectedComponent.children) {
-        this.focusedComponent = this.selectedComponent;
+  append(element: IComponent | null) {
+    if (element && this.focusedComponent && this.focusedComponent.children !== undefined) {
+      element.parent = this.focusedComponent;
+      element.path = genPath(element);
+      this.focusedComponent.children.push(element);
+      Message.success(`组件【${element.name}】添加成功`);
+      if (element.children) {
+        this.focusedComponent = element;
       }
       if (
-        this.selectedComponent.name === ComponentName.table ||
+        element.name === ComponentName.table ||
         this.focusedComponent.name === ComponentName.form ||
-        this.selectedComponent.name === ComponentName.select
+        element.name === ComponentName.select
       ) {
         this.clearSelect();
       } else if (this.focusedComponent.name === ComponentName.formItem && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
         this.focusedComponent = this.focusedComponent.parent!;
-        this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
-        this.selectedComponent.cid = cid++;
+        element = clone({ ...element, parent: undefined, children: element.children ? [] : undefined, path: undefined });
+        element.cid = cid++;
       } else {
-        this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
-        this.selectedComponent.cid = cid++;
+        element = clone({ ...element, parent: undefined, children: element.children ? [] : undefined, path: undefined });
+        element.cid = cid++;
       }
     } else if (this.focusedComponent && !this.focusedComponent.children) {
       Message.warning(`【${this.focusedComponent.name}】不允许添加子元素`);
-    } else if (!this.selectedComponent) {
+    } else if (!element) {
       Message.warning('请选择组件');
     } else if (!this.focusedComponent) {
       Message.warning('请选择焦点组件');
@@ -73,6 +74,20 @@ export default class App extends Vue {
   render (h: CreateElement) {
     return (
       <div id="app" class="flex">
+        <power-scrollbar id="toolbar">
+          <div>
+            { components.map(comp => {
+              return <el-button
+                draggable onselectstart="return false"
+                nativeOn={{
+                  drag: () => console.log('drag'),
+                  dragstart: () => this.draggedComponent = clone(comp),
+                  dragend: () => console.log('end'),
+                }}
+              >{comp.name}</el-button>;
+            }) }
+          </div>
+        </power-scrollbar>
         <power-scrollbar style="width: 330px">
           <div id="menubar">
             <div class="flex center between">
@@ -85,7 +100,7 @@ export default class App extends Vue {
             </div>
             <el-form label-width="120px" label-position="left" nativeOn={{
                 keydown: (e: KeyboardEvent) => {
-                  e.key === 'Enter' && this.append()
+                  e.key === 'Enter' && this.append(this.selectedComponent)
                 }
               }}>
               <h1>增加子元素</h1>
@@ -285,12 +300,16 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
     }
     e.stopPropagation();
   };
+  const onDrop = (e: DragEvent) => {
+    // this.append();
+    console.log('drop')
+  }
   const vnode: VNode = h(meta.tag, {
     props: { ...props, ...(props.value ? {} : { value: '' }) },
     attrs: { ...attrs },
     class: classList ? classList.concat([focusClass, `id-${meta.cid}`]) : [focusClass, `id-${meta.cid}`],
     style: { ...parseStyle(styleStr), minHeight: '40px' },
-    ...({ [meta.tag.includes('-') ? 'nativeOn' : 'on']: { click: focusClick } }),
+    ...({ [meta.tag.includes('-') ? 'nativeOn' : 'on']: { click: focusClick, dragover: (e: DragEvent) => e.preventDefault(), drop: onDrop } }),
   }, [
     meta.text,
     ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : []),
@@ -334,6 +353,13 @@ function parseStyle(str: string) {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  padding-top: 60px;
+  #toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 60px;
+  }
   #menubar {
     background-color: #faf3f7;
     padding: 10px;
