@@ -731,6 +731,13 @@
     error-stack-parser "^2.0.0"
     string-width "^2.0.0"
 
+"@types/echarts@^4.1.9":
+  version "4.1.9"
+  resolved "https://registry.npm.taobao.org/@types/echarts/download/@types/echarts-4.1.9.tgz#86fdf7ca829879535cf3b1b1490e2f46a0ea0933"
+  integrity sha1-hv33yoKYeVNc87GxSQ4vRqDqCTM=
+  dependencies:
+    "@types/zrender" "*"
+
 "@types/eslint-visitor-keys@^1.0.0":
   version "1.0.0"
   resolved "https://registry.npm.taobao.org/@types/eslint-visitor-keys/download/@types/eslint-visitor-keys-1.0.0.tgz#1ee30d79544ca84d68d4b3cdb0af4f205663dd2d"
@@ -774,6 +781,11 @@
   version "1.13.9"
   resolved "https://registry.npm.taobao.org/@types/webpack-env/download/@types/webpack-env-1.13.9.tgz#a67287861c928ebf4159a908d1fb1a2a34d4097a"
   integrity sha1-pnKHhhySjr9BWakI0fsaKjTUCXo=
+
+"@types/zrender@*":
+  version "4.0.0"
+  resolved "https://registry.npm.taobao.org/@types/zrender/download/@types/zrender-4.0.0.tgz#a6806f12ec4eccaaebd9b0d816f049aca6188fbd"
+  integrity sha1-poBvEuxOzKrr2bDYFvBJrKYYj70=
 
 "@typescript-eslint/eslint-plugin@^1.1.0":
   version "1.10.2"
@@ -3030,6 +3042,13 @@ ecc-jsbn@~0.1.1:
   dependencies:
     jsbn "~0.1.0"
     safer-buffer "^2.1.0"
+
+echarts@^4.2.1:
+  version "4.2.1"
+  resolved "https://registry.npm.taobao.org/echarts/download/echarts-4.2.1.tgz#9a8ea3b03354f86f824d97625c334cf16965ef03"
+  integrity sha1-mo6jsDNU+G+CTZdiXDNM8Wll7wM=
+  dependencies:
+    zrender "4.0.7"
 
 ee-first@1.1.1:
   version "1.1.1"
@@ -7146,6 +7165,11 @@ reselect@^3.0.1:
   resolved "https://registry.npm.taobao.org/reselect/download/reselect-3.0.1.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Freselect%2Fdownload%2Freselect-3.0.1.tgz#efdaa98ea7451324d092b2b2163a6a1d7a9a2147"
   integrity sha1-79qpjqdFEyTQkrKyFjpqHXqaIUc=
 
+resize-detector@^0.1.10:
+  version "0.1.10"
+  resolved "https://registry.npm.taobao.org/resize-detector/download/resize-detector-0.1.10.tgz#1da3f961aa5f914ccbcfd3752d52fd45beeb692c"
+  integrity sha1-HaP5YapfkUzLz9N1LVL9Rb7raSw=
+
 resize-observer-polyfill@^1.5.0:
   version "1.5.1"
   resolved "https://registry.npm.taobao.org/resize-observer-polyfill/download/resize-observer-polyfill-1.5.1.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fresize-observer-polyfill%2Fdownload%2Fresize-observer-polyfill-1.5.1.tgz#0e9020dd3d21024458d4ebd27e23e40269810464"
@@ -8457,6 +8481,14 @@ vue-class-component@^7.0.1, vue-class-component@^7.0.2:
   resolved "https://registry.npm.taobao.org/vue-class-component/download/vue-class-component-7.1.0.tgz#b33efcb10e17236d684f70b1e96f1946ec793e87"
   integrity sha1-sz78sQ4XI21oT3Cx6W8ZRux5Poc=
 
+vue-echarts@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.npm.taobao.org/vue-echarts/download/vue-echarts-4.0.3.tgz#4eee27ebadd327bb59e61a95ea35d716da8fa80d"
+  integrity sha1-Tu4n663TJ7tZ5hqV6jXXFtqPqA0=
+  dependencies:
+    lodash "^4.17.11"
+    resize-detector "^0.1.10"
+
 vue-eslint-parser@^2.0.3:
   version "2.0.3"
   resolved "https://registry.npm.taobao.org/vue-eslint-parser/download/vue-eslint-parser-2.0.3.tgz#c268c96c6d94cfe3d938a5f7593959b0ca3360d1"
@@ -8878,3 +8910,8 @@ yup@^0.27.0:
     property-expr "^1.5.0"
     synchronous-promise "^2.0.6"
     toposort "^2.0.2"
+
+zrender@4.0.7:
+  version "4.0.7"
+  resolved "https://registry.npm.taobao.org/zrender/download/zrender-4.0.7.tgz#15ae960822f5efed410995d37e5107fe3de10e6d"
+  integrity sha1-Fa6WCCL17+1BCZXTflEH/j3hDm0=

@@ -70,19 +70,21 @@ export function genVueCode(
     const firstLetter = word[0].toUpperCase();
     return firstLetter + word.slice(1);
   }).join('');
-  const directiveProps = filter(renderTree, (prop) => prop.key.startsWith('v-') && prop.value);
+  const directiveProps = filter(renderTree, (prop) => (prop.key.startsWith('v-') || prop.dynamic) && prop.value);
   const existingFields: string[] = [];
-  const valueMap: Record<string, string> = {
+  const valueMap: Record<string, string | void> = {
     string: `''`,
     boolean: 'false',
     array: '[]',
+    EchartOption: '{}',
   };
   const fields = directiveProps.map(prop => {
     if (existingFields.includes(prop.value)) {
       return '';
     }
     existingFields.push(prop.value);
-    return `  ${prop.value} = ${valueMap[String(prop.valueType)] || 'null'};`;
+    const init = valueMap[String(prop.valueType)];
+    return `  ${prop.value}: ${prop.valueType || 'any'} = ${init || 'null'};`;
   }).filter(str => str).join('\n');
   return `<template>
 ${templateCode}</template>

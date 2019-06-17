@@ -4,7 +4,8 @@ import { CreateElement, VNode, VNodeChildren } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import { Message } from 'element-ui';
 import { genTag, genPath, genVueCode } from '@/utils';
-import { components, IComponent } from './components';
+import { components, IComponent, ComponentName } from './components';
+import { EChartOption } from 'echarts';
 let cid = 0;
 @Component
 export default class App extends Vue {
@@ -15,39 +16,7 @@ export default class App extends Vue {
   hoverComponent: IComponent | null = null;
   selectedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
-  renderTree: IComponent = {
-    name: '通用 (容器)',
-    tag: 'div',
-    kv: {
-      attrs: [{
-        name: '样式',
-        key: 'class',
-        value: [],
-        options: [
-          { name: 'Flex盒模型', value: 'flex' },
-          { name: '垂直水平居中', value: 'center' },
-          { name: '水平正排', value: 'start' },
-          { name: '水平倒排', value: 'end' },
-          { name: '水平均分空格(两边留空)', value: 'around' },
-          { name: '水平均分空格(两边不留空)', value: 'between' },
-          { name: '交换垂直和水平方向', value: 'column' },
-          { name: '内容超出时换行', value: 'wrap' },
-          { name: '为子元素设置5px的外边距', value: 'little-space' },
-        ],
-        multiple: true,
-        default: '',
-      }],
-      props: [{
-        name: 'v-loading',
-        key: 'v-loading',
-        value: '',
-        valueType: 'boolean',
-      }],
-    },
-    children: [],
-    cid: cid++,
-    path: [],
-  };
+  renderTree: IComponent = { ...clone(components[0]), cid: cid++ };
   created() {
     this.focusedComponent = this.renderTree;
     document.addEventListener('keydown', ({ key }) => {
@@ -67,27 +36,34 @@ export default class App extends Vue {
       this.selectedComponent.path = genPath(this.selectedComponent);
       this.focusedComponent.children.push(this.selectedComponent);
       Message.success(`组件【${this.selectedComponent.name}】添加成功`);
-      if (this.selectedComponent.name.includes('容器')) {
+      if (this.selectedComponent.children) {
         this.focusedComponent = this.selectedComponent;
       }
-      if (this.selectedComponent!.name === '表格 (容器)' || this.focusedComponent!.name === '表单 (容器)') {
-        this.selectedComponent = null;
-        this.value = '';
-      } else if (this.focusedComponent.name === '表单项 (容器)' && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
+      if (
+        this.selectedComponent.name === ComponentName.table ||
+        this.focusedComponent.name === ComponentName.form ||
+        this.selectedComponent.name === ComponentName.select
+      ) {
+        this.clearSelect();
+      } else if (this.focusedComponent.name === ComponentName.formItem && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
         this.focusedComponent = this.focusedComponent.parent!;
         this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
-        this.selectedComponent!.cid = cid++;
+        this.selectedComponent.cid = cid++;
       } else {
         this.selectedComponent = clone({ ...this.selectedComponent, parent: undefined, children: this.selectedComponent.children ? [] : undefined, path: undefined });
-        this.selectedComponent!.cid = cid++;
+        this.selectedComponent.cid = cid++;
       }
     } else if (this.focusedComponent && !this.focusedComponent.children) {
-      Message.warning('当前的焦点组件不允许添加子元素');
+      Message.warning(`【${this.focusedComponent.name}】不允许添加子元素`);
     } else if (!this.selectedComponent) {
       Message.warning('请选择组件');
     } else if (!this.focusedComponent) {
       Message.warning('请选择焦点组件');
     }
+  }
+  clearSelect() {
+    this.selectedComponent = null;
+    this.value = '';
   }
   preview() {
     const code = genTag(this.renderTree);
@@ -114,37 +90,41 @@ export default class App extends Vue {
               }}>
               <h1>增加子元素</h1>
               <el-form-item label="组件：">
-                <el-select v-model={this.value} onChange={(e: any) => {
+                <el-select v-model={this.value} onChange={(e: IComponent) => {
                     this.selectedComponent = clone(e);
-                    this.selectedComponent!.cid = cid++;
+                    this.selectedComponent.cid = cid++;
                   }} value-key="name" placeholder="请选择">
                   { components.filter(comp => {
                     if (this.focusedComponent) {
-                      if (this.focusedComponent.name === '表格 (容器)') {
-                        const flag = comp.name === '表格列';
-                        if (flag && this.selectedComponent && this.selectedComponent.tag !== 'el-table-column') {
-                          this.selectedComponent = null;
-                          this.value = '';
+                      if (this.focusedComponent.name === ComponentName.table) {
+                        const flag = comp.name === ComponentName.tableColumn;
+                        // 当前的焦点组件是table但选择器中的组件不是table-column时，清空选择器
+                        if (flag && this.selectedComponent && this.selectedComponent.name !== ComponentName.tableColumn) {
+                          this.clearSelect();
                         }
-                        return comp.name === '表格列';
-                      } else if (this.focusedComponent.name === '表单 (容器)') {
-                        const flag = comp.name === '表单项 (容器)';
-                        if (flag && this.selectedComponent && this.selectedComponent.tag !== 'el-form-item') {
-                          this.selectedComponent = null;
-                          this.value = '';
+                        // 当焦点组件是table时，仅供选择table-column
+                        return flag;
+                      } else if (this.focusedComponent.name === ComponentName.form) {
+                        const flag = comp.name === ComponentName.formItem;
+                        // 当前的焦点组件是form但选择器中的组件不是form-item时，清空选择器
+                        if (flag && this.selectedComponent && this.selectedComponent.name !== ComponentName.formItem) {
+                          this.clearSelect();
                         }
-                        return comp.name === '表单项 (容器)';
-                      } else if (this.focusedComponent.tag === 'el-select') {
-                        const flag = comp.tag === 'el-option';
-                        if (flag && this.selectedComponent && this.selectedComponent.tag !== 'el-option') {
-                          this.selectedComponent = null;
-                          this.value = '';
+                        // 当焦点组件是form时，仅供选择form-item
+                        return flag;
+                      } else if (this.focusedComponent.name === ComponentName.select) {
+                        const flag = comp.name === ComponentName.option;
+                        // 当前的焦点组件是select但选择器中的组件不是option时，清空选择器
+                        if (flag && this.selectedComponent && this.selectedComponent.name !== ComponentName.option) {
+                          this.clearSelect();
                         }
-                        return comp.tag === 'el-option';
+                        // 当焦点组件是select时，仅供选择option
+                        return flag;
                       } else if (
-                        this.focusedComponent.tag !== 'el-form' && comp.tag === 'el-form-item' ||
-                        this.focusedComponent.tag !== 'el-table' && comp.tag === 'el-table-column' ||
-                        this.focusedComponent.tag !== 'el-select' && comp.tag === 'el-option'
+                        // 当选择的组件不是form时，不允许选择form-item，下2同理
+                        this.focusedComponent.name !== ComponentName.form && comp.name === ComponentName.formItem ||
+                        this.focusedComponent.name !== ComponentName.table && comp.name === ComponentName.tableColumn ||
+                        this.focusedComponent.name !== ComponentName.select && comp.name === ComponentName.option
                       ) {
                         return false;
                       }
@@ -190,11 +170,15 @@ export default class App extends Vue {
               </div>
             </el-form>
             <el-form label-width="120px" label-position="left">
-              <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => this.focusedComponent = this.focusedComponent!.parent!}>聚焦父容器</el-button> }</h1>
+              <h1 class="flex center between"><span>修改焦点元素</span>{ this.focusedComponent && this.focusedComponent.parent && <el-button type="primary" onClick={() => {
+                if (this.focusedComponent && this.focusedComponent.parent) {
+                  this.focusedComponent = this.focusedComponent.parent
+                }
+              }}>聚焦父容器</el-button> }</h1>
               { this.focusedComponent &&
                 <el-form-item label="路径：">
-                  { this.focusedComponent.path!.map((comp, index) => <span class="path" onMouseenter={() => this.hoverComponent = comp} onMouseleave={() => this.hoverComponent = null} onClick={() => this.focusedComponent = comp}>{index === 0 ? '' : '>'} {comp.name}</span>) }
-                  <span class="path" onMouseenter={() => this.hoverComponent = this.focusedComponent} onMouseleave={() => this.hoverComponent = null}> {this.focusedComponent.path!.length > 0 ? '>' : ''} {this.focusedComponent.name}</span>
+                  { this.focusedComponent.path && this.focusedComponent.path.map((comp, index) => <span class="path" onMouseenter={() => this.hoverComponent = comp} onMouseleave={() => this.hoverComponent = null} onClick={() => this.focusedComponent = comp}>{index === 0 ? '' : '>'} {comp.name}</span>) }
+                  { this.focusedComponent.path && <span class="path" onMouseenter={() => this.hoverComponent = this.focusedComponent} onMouseleave={() => this.hoverComponent = null}> {this.focusedComponent.path.length > 0 ? '>' : ''} {this.focusedComponent.name}</span> }
                 </el-form-item>
               }
               { this.focusedComponent && <el-form-item label="组件名称：">{this.focusedComponent.name}</el-form-item> }
@@ -249,7 +233,7 @@ export default class App extends Vue {
 }
 
 // todo rewrite
-function clone (obj: any) {
+function clone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj))
 }
 type KeyValue = Record<string, any>;
@@ -266,46 +250,67 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
       attrs[attr.key] = attr.value;
     }
   }
+  if (meta.name === ComponentName.chart) {
+    props.options = {
+      title: {
+        text: 'Example',
+      },
+      tooltip: {
+        trigger: 'axis',
+      },
+      xAxis: {
+        data: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      },
+      yAxis: {},
+      series: [{
+        name: 'Example',
+        type: 'line',
+        data: new Array(9).fill(0).map(() => Math.random() * 100),
+      }],
+    } as EChartOption;
+  }
   const classList = attrs.class;
   const styleStr = attrs.style || '';
   delete attrs.class;
   delete attrs.style;
   const focusClass = this.focusedComponent && this.focusedComponent.cid === meta!.cid ? 'focus' : '';
+  const focusClick = (e: MouseEvent) => {
+    for (const target of e.composedPath()) {
+      const elm = target as HTMLElement;
+      const cid = meta.cid === undefined ? -1 : 0;
+      if (elm.classList && elm.classList.item(elm.classList.length - 1) === `id-${cid}`) {
+        this.focusedComponent = meta;
+        continue;
+      }
+    }
+    e.stopPropagation();
+  };
   const vnode: VNode = h(meta.tag, {
     props: { ...props, ...(props.value ? {} : { value: '' }) },
-    attrs: { ...attrs, id: meta.cid && meta.cid.toString() },
-    class: classList ? classList.concat([focusClass]) : [focusClass],
+    attrs: { ...attrs },
+    class: classList ? classList.concat([focusClass, `id-${meta.cid}`]) : [focusClass, `id-${meta.cid}`],
     style: { ...parseStyle(styleStr), minHeight: '40px' },
-    ...(meta.tag.startsWith('el') ? {
-      nativeOn: {
-        click: (e: MouseEvent) => {
-          for (const target of e.composedPath()) {
-            const elm = target as HTMLElement;
-            const cid = meta.cid === undefined ? -1 : 0;
-            if (elm.id === cid.toString()) {
-              this.focusedComponent = meta;
-              continue;
-            }
-          }
-          e.stopPropagation();
-        },
-      },
-    } : {
-      on: {
-        click: (e: MouseEvent) => {
-          for (const target of e.composedPath()) {
-            const elm = target as HTMLElement;
-            const cid = meta.cid === undefined ? -1 : 0;
-            if (elm.id === cid.toString()) {
-              this.focusedComponent = meta;
-              continue;
-            }
-          }
-          e.stopPropagation();
-        },
-      },
-    })
-  }, [meta.text, ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : []),  this.hoverComponent === meta ? h('div', { class: ['overlay', 'flex', 'center'] }, meta.name) : undefined]);
+    ...({ [meta.tag.includes('-') ? 'nativeOn' : 'on']: { click: focusClick } }),
+  }, [
+    meta.text,
+    ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : []),
+  ]);
+  const el = document.querySelector(`.id-${meta.cid}`);
+  if (el) {
+    if (this.hoverComponent === meta) {
+      const overlay = document.createElement('div');
+      overlay.classList.add('overlay', 'flex', 'center');
+      overlay.textContent = meta.name;
+      el.appendChild(overlay);
+    } else {
+      const children = el.children;
+      for (const child of children) {
+        if (child.classList.contains('overlay')) {
+          child.remove();
+        }
+      }
+    }
+  }
   return vnode;
 }
 function parseStyle(str: string) {
@@ -349,7 +354,7 @@ function parseStyle(str: string) {
   }
   #render-area {
     width: calc(100% - 330px);
-    *[id] {
+    *[class*=id-] {
       position: relative;
     }
   }
@@ -407,6 +412,7 @@ function parseStyle(str: string) {
   left: 0;
   width: 100%;
   height: 100%;
+  text-align: center;
 }
 .code {
   padding: 20px 10px;

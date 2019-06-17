@@ -1,3 +1,19 @@
+export const ComponentName = {
+  container: '通用 (容器)',
+  form: '表单 (容器)',
+  formItem: '表单项 (容器)',
+  table: '表格 (容器)',
+  tableColumn: '表格列',
+  button: '按钮',
+  input: '输入框',
+  switch: '开关',
+  select: '选择器',
+  option: '选择器 - 选项',
+  checkbox: '多选框',
+  radio: '单选框',
+  text: '纯文本',
+  chart: '图表',
+};
 export interface IField {
   name: string;
   key: string;
@@ -22,7 +38,7 @@ export interface IComponent {
   path?: IComponent[];
 }
 export const components: IComponent[] = [{
-  name: '通用 (容器)',
+  name: ComponentName.container,
   tag: 'div',
   kv: {
     attrs: [{
@@ -51,7 +67,7 @@ export const components: IComponent[] = [{
   },
   children: [],
 }, {
-  name: '表单 (容器)',
+  name: ComponentName.form,
   tag: 'el-form',
   children: [],
   kv: {
@@ -90,7 +106,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '表单项 (容器)',
+  name: ComponentName.formItem,
   tag: 'el-form-item',
   text: '',
   children: [],
@@ -103,7 +119,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '表格 (容器)',
+  name: ComponentName.table,
   tag: 'el-table',
   children: [],
   kv: {
@@ -115,7 +131,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '表格列',
+  name: ComponentName.tableColumn,
   tag: 'el-table-column',
   kv: {
     props: [{
@@ -135,7 +151,7 @@ export const components: IComponent[] = [{
     }],
   }
 }, {
-  name: '按钮',
+  name: ComponentName.button,
   tag: 'el-button',
   text: '按钮',
   kv: {
@@ -210,7 +226,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '输入框',
+  name: ComponentName.input,
   tag: 'el-input',
   kv: {
     props: [{
@@ -232,7 +248,7 @@ export const components: IComponent[] = [{
     }]
   },
 }, {
-  name: '开关',
+  name: ComponentName.switch,
   tag: 'el-switch',
   kv: {
     props: [{
@@ -253,7 +269,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '选择器',
+  name: ComponentName.select,
   tag: 'el-select',
   children: [],
   kv: {
@@ -271,23 +287,21 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '选择器 - 选项',
+  name: ComponentName.option,
   tag: 'el-option',
   kv: {
     props: [{
       name: '选项名字',
       key: 'label',
       value: '',
-      dynamic: true,
     }, {
       name: '选项值',
       key: 'value',
       value: '',
-      dynamic: true,
     }],
   },
 }, {
-  name: '多选框',
+  name: ComponentName.checkbox,
   tag: 'el-checkbox',
   text: '',
   kv: {
@@ -299,7 +313,7 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '单选框',
+  name: ComponentName.radio,
   tag: 'el-radio',
   text: '',
   kv: {
@@ -311,8 +325,31 @@ export const components: IComponent[] = [{
     }],
   },
 }, {
-  name: '纯文本',
+  name: ComponentName.text,
   tag: 'span',
   text: '',
   kv: {},
+}, {
+  name: ComponentName.chart,
+  tag: 'v-chart',
+  kv: {
+    props: [{
+      name: '绑定一个选项变量',
+      key: 'options',
+      value: '',
+      valueType: 'EchartOption',
+      dynamic: true,
+    }, {
+      name: 'autoresize',
+      key: 'autoresize',
+      value: true,
+      default: false,
+    }],
+    attrs: [{
+      name: '样式',
+      key: 'style',
+      value: 'width: 100%',
+      default: '',
+    }]
+  },
 }];
