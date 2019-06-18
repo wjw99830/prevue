@@ -17,7 +17,7 @@ export default class App extends Vue {
   selectedComponent: IComponent | null = null;
   draggedComponent: IComponent | null = null;
   focusedComponent: IComponent | null = null;
-  renderTree: IComponent = { ...clone(components[0]), cid: cid++ };
+  renderTree: IComponent = { ...clone(components[0]), cid: cid++, path: [] };
   created() {
     this.focusedComponent = this.renderTree;
     document.addEventListener('keydown', ({ key }) => {
@@ -31,34 +31,42 @@ export default class App extends Vue {
   save() {
     localStorage.setItem('latest-render-tree', JSON.stringify(this.renderTree));
   }
-  append(element: IComponent | null) {
-    if (element && this.focusedComponent && this.focusedComponent.children !== undefined) {
-      element.parent = this.focusedComponent;
+  append(element: IComponent | null, parent: IComponent | null) {
+    if (
+      parent && parent.name !== ComponentName.form && element && element.name === ComponentName.formItem ||
+      parent && parent.name !== ComponentName.table && element && element.name === ComponentName.tableColumn ||
+      parent && parent.name !== ComponentName.select && element && element.name === ComponentName.option
+    ) {
+      Message.warning(`【${parent.name}】不允许添加【${element.name}】`);
+      return;
+    }
+    if (element && parent && parent.children !== undefined) {
+      element.parent = parent;
       element.path = genPath(element);
-      this.focusedComponent.children.push(element);
+      parent.children.push(element);
       Message.success(`组件【${element.name}】添加成功`);
       if (element.children) {
-        this.focusedComponent = element;
+        parent = element;
       }
       if (
         element.name === ComponentName.table ||
-        this.focusedComponent.name === ComponentName.form ||
+        parent.name === ComponentName.form ||
         element.name === ComponentName.select
       ) {
         this.clearSelect();
-      } else if (this.focusedComponent.name === ComponentName.formItem && (this.focusedComponent.children!.length > 0 || this.focusedComponent.text)) {
-        this.focusedComponent = this.focusedComponent.parent!;
+      } else if (parent.name === ComponentName.formItem && (parent.children!.length > 0 || parent.text)) {
+        parent = parent.parent!;
         element = clone({ ...element, parent: undefined, children: element.children ? [] : undefined, path: undefined });
         element.cid = cid++;
       } else {
         element = clone({ ...element, parent: undefined, children: element.children ? [] : undefined, path: undefined });
         element.cid = cid++;
       }
-    } else if (this.focusedComponent && !this.focusedComponent.children) {
-      Message.warning(`【${this.focusedComponent.name}】不允许添加子元素`);
+    } else if (parent && !parent.children) {
+      Message.warning(`【${parent.name}】不允许添加子元素`);
     } else if (!element) {
       Message.warning('请选择组件');
-    } else if (!this.focusedComponent) {
+    } else if (!parent) {
       Message.warning('请选择焦点组件');
     }
   }
@@ -76,16 +84,16 @@ export default class App extends Vue {
       <div id="app" class="flex">
         <power-scrollbar id="toolbar">
           <div>
-            { components.map(comp => {
-              return <el-button
-                draggable onselectstart="return false"
-                nativeOn={{
-                  drag: () => console.log('drag'),
-                  dragstart: () => this.draggedComponent = clone(comp),
-                  dragend: () => console.log('end'),
-                }}
-              >{comp.name}</el-button>;
-            }) }
+            <span>
+              { components.map(comp => {
+                return <el-button
+                  draggable onselectstart="return false"
+                  nativeOn={{
+                    dragstart: () => this.draggedComponent = clone(comp),
+                  }}
+                >{comp.name}</el-button>;
+              }) }
+            </span>
           </div>
         </power-scrollbar>
         <power-scrollbar style="width: 330px">
@@ -100,7 +108,7 @@ export default class App extends Vue {
             </div>
             <el-form label-width="120px" label-position="left" nativeOn={{
                 keydown: (e: KeyboardEvent) => {
-                  e.key === 'Enter' && this.append(this.selectedComponent)
+                  e.key === 'Enter' && this.append(this.selectedComponent, this.focusedComponent)
                 }
               }}>
               <h1>增加子元素</h1>
@@ -181,7 +189,7 @@ export default class App extends Vue {
                 </el-form-item>
               )) }
               <div class="flex center end">
-                <el-button type="success" onClick={this.append.bind(this)}>确定</el-button>
+                <el-button type="success" onClick={() => this.append(this.selectedComponent, this.focusedComponent)}>确定</el-button>
               </div>
             </el-form>
             <el-form label-width="120px" label-position="left">
@@ -301,8 +309,9 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
     e.stopPropagation();
   };
   const onDrop = (e: DragEvent) => {
-    // this.append();
-    console.log('drop')
+    this.draggedComponent!.cid = cid++;
+    this.append(this.draggedComponent, meta);
+    e.stopPropagation();
   }
   const vnode: VNode = h(meta.tag, {
     props: { ...props, ...(props.value ? {} : { value: '' }) },
@@ -315,6 +324,7 @@ function genNode (this: App, h: CreateElement, meta: IComponent) {
     ...(meta.children ? meta.children.map(child => genNode.call(this, h, child)) : []),
   ]);
   const el = document.querySelector(`.id-${meta.cid}`);
+    console.log(meta.cid, el)
   if (el) {
     if (this.hoverComponent === meta) {
       const overlay = document.createElement('div');
@@ -359,6 +369,15 @@ function parseStyle(str: string) {
     top: 0;
     left: 0;
     height: 60px;
+    width: 100%;
+    line-height: 60px;
+    padding: 0 10px;
+    > *:first-child {
+      span {
+        display: inline-block;
+        white-space: nowrap;
+      }
+    }
   }
   #menubar {
     background-color: #faf3f7;
